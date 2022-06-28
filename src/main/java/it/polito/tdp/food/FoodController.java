@@ -5,8 +5,11 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.food.model.Adiacenza;
+import it.polito.tdp.food.model.Food;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,6 +21,7 @@ import javafx.scene.control.TextField;
 public class FoodController {
 	
 	private Model model;
+	private boolean entrato = false;
 
     @FXML // ResourceBundle that was given to the FXMLLoader
     private ResourceBundle resources;
@@ -41,7 +45,7 @@ public class FoodController {
     private Button btnSimula; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxFood"
-    private ComboBox<?> boxFood; // Value injected by FXMLLoader
+    private ComboBox<Food> boxFood; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -49,19 +53,67 @@ public class FoodController {
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    	txtResult.appendText("Grafo creato!\n");
+    	try {
+			int por = Integer.parseInt(txtPorzioni.getText());
+			entrato = true;
+			model.creaGrafo(por);
+			txtResult.appendText("# VERTICI: " + model.getNVertici() + "\n# ARCHI: " + model.getNArchi());
+			boxFood.getItems().addAll(model.getVertici());
+		} catch (NumberFormatException e) {
+			throw e;
+		}
     }
     
     @FXML
     void doCalorie(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Analisi calorie...");
+    	if(entrato) {
+    		txtResult.clear();
+        	txtResult.appendText("Analisi calorie...\n");
+        	if(boxFood.getValue() != null) {
+        		List<Adiacenza> adiacenze = model.calorieCongiunte(boxFood.getValue());
+        		
+        		if(adiacenze.size() > 0) {
+        			int num = 0;
+        			if(adiacenze.size() < 5) {
+        				num = adiacenze.size();
+        			}
+        			else {
+        				num = 5;
+        			}
+ 
+        			String string = "";
+        			
+        			for (int i=0; i<num; i++) {
+        				string += adiacenze.get(i).getF2().getDisplay_name() + " - " + adiacenze.get(i).getPeso() + "\n";
+        			}
+        			
+        			txtResult.appendText(string);
+        		}
+        		else {
+        			txtResult.appendText("Non ci sono archi per il food selezionato");
+        		}
+        	}
+    	}
+    	else {
+    		txtResult.appendText("Creare prima il grafo!\n");
+    	}
     }
 
     @FXML
     void doSimula(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Simulazione...");
+    	if(entrato) {
+    		txtResult.clear();
+        	txtResult.appendText("Simulazione...\n");
+        	
+    		try {
+    			int k = Integer.parseInt(txtK.getText());
+    			txtResult.appendText(model.getDatiSimulazione(k, boxFood.getValue()));
+    		} catch (NumberFormatException e) {
+    			throw e;
+    		}
+    	}
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
